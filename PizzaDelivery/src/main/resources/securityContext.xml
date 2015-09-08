@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd">
+    
+    <!-- Security to URL -->	
+	<global-method-security secured-annotations="enabled"/>
+	
+	 <beans:bean id="myAuthenticationSuccessHandler"
+        class="ua.pizzadelivery.web.MySimpleUrlAuthenticationSuccessHandler" />
+	
+	<http  pattern="/rest/**" create-session="stateless">	
+		<intercept-url pattern="/**" access="hasRole('USER')"/>
+		<http-basic/>
+		<csrf disabled="false"/>
+	</http>
+	
+    <http>
+    	<intercept-url pattern="/jsp/pizza/" access="permitAll" />
+        <intercept-url pattern="/jsp/registration/" access="permitAll" />
+        <intercept-url pattern="/jsp/admin/**" access="hasRole('ADMIN')"/>
+        <intercept-url pattern="/jsp/register/" access="permitAll" />
+        <intercept-url pattern="/jsp/pizza/**" access="isFullyAuthenticated()"/>
+        <intercept-url pattern="/jsp/pizza/" access="permitAll" />
+        <intercept-url pattern="/jsp/order/**" access="isFullyAuthenticated()"/>
+        <form-login authentication-success-handler-ref="myAuthenticationSuccessHandler"/>
+        <logout/>
+    </http>   
+    
+    <!-- inbuild login form-->
+	<!-- <http >
+		
+          <intercept-url pattern="/**" access="isFullyAuthenticated()" />
+          <form-login default-target-url="/jsp/pizza/" />
+        <form-login authentication-success-handler-ref="myAuthenticationSuccessHandler"/>
+        <logout />
+    </http>
+     --> 
+    
+    <!--    custom login page 
+    <http>
+        <intercept-url pattern="/login.jsp" access="isAnonymous()" />
+        <intercept-url pattern="/**" access="hasRole('USER')" />
+        <intercept-url pattern="/**" access="hasRole('USER')" />
+        <form-login login-page="/login.jsp" always-use-default-target="true" default-target-url=""/>
+        <logout />
+    </http>
+    -->    
+    
+    <!-- How we check  -->
+    <authentication-manager >
+        <authentication-provider>    
+        	<jdbc-user-service 
+          		data-source-ref="dataSource" 
+          		id="userService"
+          		users-by-username-query=
+							"select c.name, u.password, true from customer c
+								join users u on c.customer_id=u.customer_id where c.name=?"							
+
+				authorities-by-username-query=
+						"select c.name, role from  customer c
+							join user_roles ur on c.customer_id=ur.customer_id where c.name =? "/> 												
+						
+           <!--   <user-service>
+                <user name="user" password="user" authorities="ROLE_USER" />
+                <user name="bob" password="000" authorities="ROLE_USER, ROLE_ADMIN" />
+                <user name="admin" password="admin" authorities="ROLE_ADMIN" />
+            </user-service>
+            -->
+        </authentication-provider>
+    </authentication-manager>        
+</beans:beans>
